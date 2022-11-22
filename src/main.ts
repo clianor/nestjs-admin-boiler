@@ -12,15 +12,17 @@ async function bootstrap() {
   app.enableCors();
   app.setGlobalPrefix('api');
 
-  const config = new DocumentBuilder()
-    .setTitle('NestJS Docs')
-    .setDescription('Boilerplate for admin')
-    .setVersion('0.0.1')
-    .addTag('api')
-    .build();
+  if (process.env.NODE_ENV === 'development') {
+    const config = new DocumentBuilder()
+      .setTitle('NestJS Docs')
+      .setDescription('Boilerplate for admin')
+      .setVersion('0.0.1')
+      .addTag('api')
+      .build();
 
-  const document = SwaggerModule.createDocument(app, config);
-  SwaggerModule.setup('swagger', app, document);
+    const document = SwaggerModule.createDocument(app, config);
+    SwaggerModule.setup('swagger', app, document);
+  }
 
   const port = process.env.PORT;
   await app.listen(port, () => {
