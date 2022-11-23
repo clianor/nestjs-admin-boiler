@@ -21,7 +21,6 @@ export class CoreEntity {
   @IsDate()
   @DeleteDateColumn({
     type: 'timestamp',
-    default: () => 'CURRENT_TIMESTAMP',
   })
   deletedAt: Date;
 }

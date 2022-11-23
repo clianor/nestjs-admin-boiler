@@ -1,4 +1,5 @@
 import { InternalServerErrorException } from '@nestjs/common';
+import { ApiProperty } from '@nestjs/swagger';
 
 import { compare, hash } from 'bcryptjs';
 import { Exclude } from 'class-transformer';
@@ -11,28 +12,34 @@ import { Role } from '../enums/role.enum';
 
 @Entity()
 export class User extends CoreEntity {
+  @ApiProperty()
   @IsNumber()
   @PrimaryGeneratedColumn('increment')
   id: number;
 
+  @ApiProperty()
   @IsString()
   @Column()
   name: string;
 
+  @ApiProperty()
   @IsNotEmpty()
   @IsEmail()
   @Column({ unique: true })
   email: string;
 
+  @ApiProperty()
   @Exclude({ toPlainOnly: true })
   @IsString()
   @Column()
   password: string;
 
+  @ApiProperty()
   @IsBoolean()
   @Column({ default: true })
   isActive: boolean;
 
+  @ApiProperty()
   @IsEnum(Role)
   @Column({ type: 'enum', enum: Role, default: Role.User })
   role: Role[];
