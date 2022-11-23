@@ -7,7 +7,7 @@
   "trailingComma": "all",
   "bracketSpacing": true,
   "arrowParens": "always",
-  "importOrder": ["^@nestjs/(.*)$", "<THIRD_PARTY_MODULES>", "^[./]"],
+  "importOrder": ["^@nestjs/(.*)$", "<THIRD_PARTY_MODULES>", "^src/(.*)$", "^[./]"],
   "importOrderSeparation": true,
   "importOrderParserPlugins": ["classProperties", "decorators-legacy", "typescript"]
 }

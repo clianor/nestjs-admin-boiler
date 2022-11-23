@@ -5,10 +5,12 @@ import { Exclude } from 'class-transformer';
 import { IsBoolean, IsEmail, IsEnum, IsNotEmpty, IsNumber, IsString } from 'class-validator';
 import { BeforeInsert, Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
 
+import { CoreEntity } from 'src/common/core.entity';
+
 import { Role } from '../enums/role.enum';
 
 @Entity()
-export class User {
+export class User extends CoreEntity {
   @IsNumber()
   @PrimaryGeneratedColumn('increment')
   id: number;
