@@ -1,16 +1,21 @@
 import { Module } from '@nestjs/common';
+import { ConfigModule } from '@nestjs/config';
+import { JwtService } from '@nestjs/jwt';
 import { TypeOrmModule } from '@nestjs/typeorm';
 
-import { User } from 'src/users/entities/users.entity';
-import { UsersModule } from 'src/users/users.module';
+import { TotpModule } from 'src/totp/totp.module';
+import { User } from 'src/user/entities/user.entity';
+import { UserModule } from 'src/user/user.module';
 
-import { AuthController } from './auth.controller';
-import { AuthService } from './auth.service';
+import { AuthController } from './controllers/auth.controller';
+import { TwoFactorAuthController } from './controllers/two-factor-auth.controller';
+import { AuthService } from './services/auth.service';
+import { TwoFactorAuthService } from './services/two-factor-auth.service';
 
 @Module({
-  imports: [UsersModule, TypeOrmModule.forFeature([User])],
-  controllers: [AuthController],
-  providers: [AuthService],
-  exports: [AuthService],
+  imports: [TypeOrmModule.forFeature([User]), ConfigModule, TotpModule, UserModule],
+  controllers: [AuthController, TwoFactorAuthController],
+  providers: [AuthService, TwoFactorAuthService, JwtService],
+  exports: [AuthService, TwoFactorAuthService, JwtService],
 })
 export class AuthModule {}

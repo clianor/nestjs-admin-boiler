@@ -8,7 +8,9 @@ import { AppModule } from './app.module';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
-  app.use(helmet());
+  if (process.env.NODE_ENV === 'production') {
+    app.use(helmet());
+  }
   app.enableCors();
   app.setGlobalPrefix('api');
 
@@ -18,6 +20,7 @@ async function bootstrap() {
       .setDescription('Boilerplate for admin')
       .setVersion('0.0.1')
       .addTag('api')
+      .addBearerAuth({ type: 'http', scheme: 'bearer', bearerFormat: 'Token' }, 'access-token')
       .build();
 
     const document = SwaggerModule.createDocument(app, config);

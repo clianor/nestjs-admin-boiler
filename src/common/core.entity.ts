@@ -1,8 +1,11 @@
+import { ApiProperty } from '@nestjs/swagger';
+
 import { Exclude } from 'class-transformer';
 import { IsDate } from 'class-validator';
 import { CreateDateColumn, DeleteDateColumn, UpdateDateColumn } from 'typeorm';
 
 export class CoreEntity {
+  @ApiProperty({ type: Date, description: '생성일자' })
   @IsDate()
   @CreateDateColumn({
     type: 'timestamp',
@@ -10,6 +13,7 @@ export class CoreEntity {
   })
   createdAt: Date;
 
+  @ApiProperty({ type: Date, description: '업데이트일자' })
   @IsDate()
   @UpdateDateColumn({
     type: 'timestamp',
@@ -17,6 +21,7 @@ export class CoreEntity {
   })
   updatedAt: Date;
 
+  @ApiProperty({ type: Date, description: '삭제일자' })
   @Exclude()
   @IsDate()
   @DeleteDateColumn({

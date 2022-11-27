@@ -1,10 +1,5 @@
-import { config } from 'dotenv';
 import { join } from 'path';
-import { DataSource, DataSourceOptions } from 'typeorm';
-
-config({
-  path: '.env',
-});
+import { DataSourceOptions } from 'typeorm';
 
 export const dbConfig = (): DataSourceOptions =>
   ({
@@ -25,7 +20,3 @@ export const dbConfig = (): DataSourceOptions =>
       entitiesDir: join(__dirname, '../../**/*.entity{.ts,.js}'),
     },
   } as any);
-
-console.log(dbConfig());
-
-export default new DataSource(dbConfig());
