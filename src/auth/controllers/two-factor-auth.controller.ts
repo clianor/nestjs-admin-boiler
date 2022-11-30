@@ -1,15 +1,17 @@
 import {
   Body,
   Controller,
-  HttpCode,
+  HttpStatus,
   Post,
   Res,
   UnauthorizedException,
   UseGuards,
 } from '@nestjs/common';
-import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiResponse, ApiTags } from '@nestjs/swagger';
 
 import { Response } from 'express';
+
+import { User } from 'src/user/entities/user.entity';
 
 import { GetUser } from '../decorators/get-user.decorator';
 import { TwoFactorDto } from '../dtos/two-factor.dto';
@@ -22,24 +24,38 @@ export class TwoFactorAuthController {
   constructor(private readonly twoFactorAuthService: TwoFactorAuthService) {}
 
   @ApiBearerAuth('access-token')
+  @ApiResponse({
+    status: HttpStatus.OK,
+    description: 'QR 이미지 생성',
+  })
   @UseGuards(JwtTwoFactorGuard)
   @Post('generate-qr')
-  @HttpCode(200)
-  async generateQrCode(@GetUser() user, @Res() response: Response) {
+  async generateQrCode(@GetUser() user: User, @Res() res: Response) {
     const { otpAuthUrl } = await this.twoFactorAuthService.generateTwoFactorAuthSecret(user);
-    response.setHeader('content-type', 'image/png');
-    return this.twoFactorAuthService.qrCodeStreamPipe(response, otpAuthUrl);
+    res.setHeader('content-type', 'image/png');
+    res.status(HttpStatus.OK);
+    return this.twoFactorAuthService.qrCodeStreamPipe(res, otpAuthUrl);
   }
 
   @ApiBearerAuth('access-token')
+  @ApiResponse({
+    status: HttpStatus.OK,
+    description: '2fa 인증 로그인',
+  })
   @UseGuards(JwtTwoFactorGuard)
   @Post('authenticate')
-  @HttpCode(200)
-  async authenticate(@GetUser() user, @Body() twoFactorDto: TwoFactorDto) {
-    const isValid = this.twoFactorAuthService.verify(twoFactorDto.code, user);
-    if (!isValid) {
-      throw new UnauthorizedException('잘못된 인증 코드입니다.');
+  async authenticate(
+    @GetUser() user: User,
+    @Body() twoFactorDto: TwoFactorDto,
+    @Res() res: Response,
+  ) {
+    const isCodeValid = this.twoFactorAuthService.verifyTwoFaCode(twoFactorDto.code, user);
+    if (!isCodeValid) {
+      throw new UnauthorizedException('잘못된 OTP 인증 코드입니다.');
     }
-    return this.twoFactorAuthService.login(user, true);
+
+    const result = await this.twoFactorAuthService.login(user, true);
+    res.status(result.statusCode);
+    return result;
   }
 }

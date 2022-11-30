@@ -1,4 +1,4 @@
-import { ForbiddenException, Injectable } from '@nestjs/common';
+import { ForbiddenException, HttpStatus, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 
 import { Response } from 'express';
@@ -6,10 +6,10 @@ import { authenticator } from 'otplib';
 import { toFileStream } from 'qrcode';
 import { Repository } from 'typeorm';
 
-import { TotpService } from 'src/totp/totp.service';
 import { User } from 'src/user/entities/user.entity';
 import { UserService } from 'src/user/user.service';
 
+import { LoginOutputDto } from '../dtos/login.dto';
 import { JwtPayload } from '../interface/jwt-payload.interface';
 import { AuthService } from './auth.service';
 
@@ -19,19 +19,18 @@ export class TwoFactorAuthService {
     @InjectRepository(User)
     private readonly userRepository: Repository<User>,
     private readonly userService: UserService,
-    private readonly totpService: TotpService,
     private readonly authService: AuthService,
   ) {}
 
   async generateTwoFactorAuthSecret(user: User) {
-    const auth = await this.userService.findOne(user.email);
+    const auth = await this.userService.findByEmail(user.email);
     if (!auth || !auth.isTwoFactorEnable) {
       throw new ForbiddenException('Two Factor 권한이 없습니다.');
     }
 
-    const secret = this.totpService.generateSecret();
+    const secret = authenticator.generateSecret();
     const issuer = 'alyac';
-    const otpAuthUrl = authenticator.keyuri(user.name, issuer, secret);
+    const otpAuthUrl = authenticator.keyuri(user.email, issuer, secret);
     await this.userRepository.update({ id: user.id }, { twoFactorAuthSecret: secret });
     return {
       secret,
@@ -40,15 +39,14 @@ export class TwoFactorAuthService {
   }
 
   async qrCodeStreamPipe(stream: Response, otpPathUrl: string) {
-    console.log('otpPathUrl', otpPathUrl);
     return toFileStream(stream, otpPathUrl);
   }
 
-  verify(code: string, user: User): boolean {
-    return this.totpService.checkToken(code, user.twoFactorAuthSecret);
+  verifyTwoFaCode(code: string, user: User): boolean {
+    return authenticator.verify({ token: code, secret: user.twoFactorAuthSecret });
   }
 
-  async login(user: User, isTwoFaAuthenticated: boolean) {
+  async login(user: User, isTwoFaAuthenticated: boolean): Promise<LoginOutputDto> {
     const payload: JwtPayload = {
       isTwoFaAuthenticated,
       isTwoFactorEnable: user.isTwoFactorEnable,
@@ -63,8 +61,11 @@ export class TwoFactorAuthService {
     await this.userRepository.update({ id: user.id }, { refreshToken });
 
     return {
-      accessToken,
-      refreshToken,
+      statusCode: HttpStatus.OK,
+      data: {
+        accessToken,
+        refreshToken,
+      },
     };
   }
 }

@@ -22,13 +22,19 @@ export class UserService {
     return this.userRepository.find();
   }
 
-  findOne(email: string): Promise<User> {
+  findByEmail(email: string): Promise<User> {
     return this.userRepository.findOne({
       where: { email },
     });
   }
 
-  async remove(id: number): Promise<void> {
+  findById(id: number): Promise<User> {
+    return this.userRepository.findOne({
+      where: { id },
+    });
+  }
+
+  async removeById(id: number): Promise<void> {
     await this.userRepository.delete(id);
   }
 }

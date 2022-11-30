@@ -57,6 +57,7 @@ import { UserModule } from './user/user.module';
     {
       provide: APP_PIPE,
       useValue: new ValidationPipe({
+        transform: true,
         whitelist: true,
       }),
     },

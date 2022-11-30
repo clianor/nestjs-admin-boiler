@@ -1,12 +1,16 @@
-import { ApiProperty, PickType } from '@nestjs/swagger';
+import { PickType } from '@nestjs/swagger';
 
-import { IsNotEmpty, IsString } from 'class-validator';
+import { Expose } from 'class-transformer';
 
+import { CoreOutputDto } from 'src/common/core-output.dt';
 import { User } from 'src/user/entities/user.entity';
 
-export class LoginDto extends PickType(User, ['email'] as const) {
-  @ApiProperty({ type: String, description: '유저 패스워드' })
-  @IsNotEmpty()
-  @IsString()
-  password: string;
+export class LoginDto extends PickType(User, ['email', 'password'] as const) {}
+
+export class LoginOutputDto extends CoreOutputDto {
+  @Expose()
+  data?: {
+    accessToken: string;
+    refreshToken?: string;
+  };
 }

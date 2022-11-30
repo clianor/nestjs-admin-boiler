@@ -2,7 +2,7 @@ import { InternalServerErrorException } from '@nestjs/common';
 import { ApiProperty } from '@nestjs/swagger';
 
 import { compare, hash } from 'bcryptjs';
-import { Exclude } from 'class-transformer';
+import { Expose } from 'class-transformer';
 import {
   IsBoolean,
   IsEmail,
@@ -11,6 +11,7 @@ import {
   IsNumber,
   IsOptional,
   IsString,
+  Max,
 } from 'class-validator';
 import { BeforeInsert, BeforeUpdate, Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
 
@@ -21,50 +22,56 @@ import { Role } from '../enums/role.enum';
 @Entity()
 export class User extends CoreEntity {
   @ApiProperty({ type: String, description: '유저 고유값' })
+  @Expose()
+  @IsOptional()
   @IsNumber()
   @PrimaryGeneratedColumn('increment')
   id: number;
 
   @ApiProperty({ type: String, description: '유저 이름' })
+  @Expose()
   @IsString()
   @Column()
   name: string;
 
   @ApiProperty({ type: String, description: '유저 이메일' })
+  @Expose()
   @IsNotEmpty()
   @IsEmail()
   @Column({ unique: true })
   email: string;
 
   @ApiProperty({ type: String, description: '유저 패스워드' })
-  @Exclude()
   @IsString()
   @Column()
   password: string;
 
   @ApiProperty({ type: Role, description: '유저 권한' })
+  @Expose()
+  @IsOptional()
   @IsEnum(Role)
   @Column({ type: 'enum', enum: Role, default: Role.User })
   role: Role;
 
   @ApiProperty({ type: Boolean, description: '2fa 활성화 여부' })
+  @Expose()
+  @IsOptional()
   @IsBoolean()
   @Column({ default: true })
   isTwoFactorEnable: boolean;
 
   @ApiProperty({ type: Boolean, description: '2fa 고유 키', required: false })
-  @Exclude()
   @IsOptional()
   @IsNotEmpty()
   @IsString()
   @Column({ nullable: true })
   twoFactorAuthSecret?: string;
 
-  @Exclude()
   @IsOptional()
   @IsNotEmpty()
+  @Max(300)
   @IsString()
-  @Column({ nullable: true })
+  @Column({ nullable: true, length: 300 })
   refreshToken?: string;
 
   @BeforeInsert()

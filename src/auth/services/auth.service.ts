@@ -1,6 +1,7 @@
 import {
   BadRequestException,
   ConflictException,
+  HttpStatus,
   Injectable,
   NotFoundException,
   UnauthorizedException,
@@ -11,11 +12,11 @@ import { InjectRepository } from '@nestjs/typeorm';
 
 import { Repository } from 'typeorm';
 
-import { CreateUserDto } from 'src/user/dtos/create-user.dto';
 import { User } from 'src/user/entities/user.entity';
 import { UserService } from 'src/user/user.service';
 
-import { LoginDto } from '../dtos/login.dto';
+import { LoginDto, LoginOutputDto } from '../dtos/login.dto';
+import { RegisterDto, RegisterOutputDto } from '../dtos/register.dto';
 import { JwtPayload } from '../interface/jwt-payload.interface';
 
 @Injectable()
@@ -66,17 +67,17 @@ export class AuthService {
     }
   }
 
-  async register(createUserDto: CreateUserDto): Promise<User> {
-    const user = await this.userService.findOne(createUserDto.email);
+  async register(createUserDto: RegisterDto): Promise<RegisterOutputDto> {
+    const user = await this.userService.findByEmail(createUserDto.email);
     if (user) throw new ConflictException('이미 존재하는 유저입니다.');
-    return await this.userService.create(createUserDto);
+    return {
+      statusCode: HttpStatus.CREATED,
+      data: await this.userService.create(createUserDto),
+    };
   }
 
-  async login({
-    email,
-    password,
-  }: LoginDto): Promise<{ accessToken: string; refreshToken?: string }> {
-    const user = await this.userService.findOne(email);
+  async login({ email, password }: LoginDto): Promise<LoginOutputDto> {
+    const user = await this.userService.findByEmail(email);
     if (!user) throw new NotFoundException('존재하지 않는 유저입니다.');
 
     const compare = await user.checkPassword(password);
@@ -94,7 +95,10 @@ export class AuthService {
 
     if (user.isTwoFactorEnable) {
       return {
-        accessToken,
+        statusCode: HttpStatus.OK,
+        data: {
+          accessToken,
+        },
       };
     }
 
@@ -103,8 +107,15 @@ export class AuthService {
     await this.userRepository.update({ id: user.id }, { refreshToken });
 
     return {
-      accessToken,
-      refreshToken,
+      statusCode: HttpStatus.OK,
+      data: {
+        accessToken,
+        refreshToken,
+      },
     };
+  }
+
+  async logout(user) {
+    return this.userRepository.update({ id: user.id }, { refreshToken: null });
   }
 }
